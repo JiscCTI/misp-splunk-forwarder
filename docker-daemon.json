@@ -1,0 +1,12 @@
+{
+    "log-driver": "splunk",
+    "log-opts": {
+        "splunk-token": "00000000-1111-2222-3333-444444444444",
+        "splunk-url": "https://splunk.example.com:8088",
+        "splunk-sourcetype": "_json",
+        "splunk-index": "default",
+        "tag": "image={{.ImageName}} containerId={{.ID}}",
+        "labels": "org.opencontainers.image.title,org.opencontainers.image.version",
+        "env": "FQDN,HTTPS_PORT"
+    }
+}

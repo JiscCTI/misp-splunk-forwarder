@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: 2023 Jisc Services Limited
+# SPDX-FileContributor: Joe Pitt
+#
+# SPDX-License-Identifier: GPL-3.0-only
+
+[httpout]
+httpEventCollectorToken = 00000000-1111-2222-3333-444444444444
+uri = https://splunk.example.com:8088
+useSSL = true
+
+# By default HEC uses a self-signed certificate - this should be replaced and these two lines removed
+sslVerifyServerCert = false
+sslVerifyServerName = false

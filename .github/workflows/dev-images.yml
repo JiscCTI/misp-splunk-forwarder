@@ -1,0 +1,42 @@
+# SPDX-FileCopyrightText: 2023 Jisc Services Limited
+# SPDX-FileContributor: Joe Pitt
+#
+# SPDX-License-Identifier: GPL-3.0-only
+
+name: Development Image
+on:
+  push:
+    branches:
+      - '**'
+      - '!main'
+  workflow_dispatch:
+jobs:
+  run-dev:
+    name: Build and Release
+    runs-on: ubuntu-latest
+    steps:
+      # Environment Setup
+      - id: checkout
+        name: Checkout Project
+        uses: actions/checkout@v3
+      - id: docker-login
+        name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+      - id: setup-buildx
+        name: Setup Docker buildx Environment
+        uses: docker/setup-buildx-action@v2
+
+      # Build Image
+      - id: build
+        name: Build Image
+        run: docker build -t ${{ vars.DOCKERHUB_ORGANISATION }}/misp-splunk-forwarder:dev -t ${{ vars.DOCKERHUB_ORGANISATION }}/misp-splunk-forwarder:$(date '+%Y%m%d')-dev .
+
+      # Push New Image
+      - id: push
+        name: Push Image
+        run: |
+          docker image push ${{ vars.DOCKERHUB_ORGANISATION }}/misp-splunk-forwarder:$(date '+%Y%m%d')-dev
+          docker image push ${{ vars.DOCKERHUB_ORGANISATION }}/misp-splunk-forwarder:dev
