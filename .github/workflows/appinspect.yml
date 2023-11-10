@@ -1,0 +1,40 @@
+# SPDX-FileCopyrightText: 2023 Jisc Services Limited
+# SPDX-FileContributor: Joe Pitt
+#
+# SPDX-License-Identifier: GPL-3.0-only
+
+name: AppInspect
+on:
+  push:
+    branches:
+      - 'main'
+  workflow_dispatch:
+jobs:
+  appinspect:
+    name: Inspect App
+    runs-on: ubuntu-latest
+    steps:
+      - id: checkout
+        name: Checkout Project
+        uses: actions/checkout@v3
+      - id: pip
+        name: Install AppInspect
+        run: |
+          python3 -m venv venv
+          source venv/bin/activate
+          python3 -m pip install --quiet --no-cache-dir --upgrade pip
+          python3 -m pip install --quiet --no-cache-dir --upgrade splunk-appinspect
+      - id: prepare_app
+        name: Prepare App
+        run: |
+          mv app/ misp_docker/
+          python3 -m pip install --quiet --no-cache-dir --target=misp_docker/lib -r misp_docker/requirements.txt
+          find misp_docker/ -name __pycache__ -exec rm -rf {} \; > /dev/null 2>&1 || true
+          find misp_docker/ -type d -exec chmod 755 {} \; || true
+          find misp_docker/ -type f -exec chmod 644 {} \; || true
+          tar cfz "misp_docker.spl" "misp_docker/"
+      - id: inspect_app
+        name: Inspect App
+        run: |
+          ./venv/bin/splunk-appinspect inspect --mode=precert --max-messages=all --output-file report.json misp_docker.spl 2>&1 >/dev/null
+          python3 .github/workflow-helpers/appinspect-check.py

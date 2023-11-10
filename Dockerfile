@@ -19,4 +19,6 @@ COPY --chown=ansible:ansible entrypoint.sh /sbin/entrypoint.sh
 COPY --chown=ansible:ansible app/ /opt/splunkforwarder/etc/apps/misp_docker
 RUN /bin/python -m pip install --target=/opt/splunkforwarder/etc/apps/misp_docker/lib\
     -r /opt/splunkforwarder/etc/apps/misp_docker/requirements.txt &&\
+    find /opt/splunkforwarder/etc/apps/misp_docker/ -type d -exec chmod 755 {} \; || true &&\
+    find /opt/splunkforwarder/etc/apps/misp_docker/ -type f -exec chmod 644 {} \; || true &&\
     chmod +x /sbin/entrypoint.sh

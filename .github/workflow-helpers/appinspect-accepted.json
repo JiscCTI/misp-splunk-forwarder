@@ -1,0 +1,47 @@
+[
+    {
+        "justification": "This app is for Universal Forwarders only",
+        "message_filename": null,
+        "name": "check_app_icon_2x_dimensions"
+    },
+    {
+        "justification": "This app is for Universal Forwarders only",
+        "message_filename": null,
+        "name": "check_app_icon_2x_is_png"
+    },
+    {
+        "justification": "This app is for Universal Forwarders only",
+        "message_filename": null,
+        "name": "check_app_icon_dimensions"
+    },
+    {
+        "justification": "This app is for Universal Forwarders only",
+        "message_filename": null,
+        "name": "check_app_icon_is_png"
+    },
+    {
+        "justification": "Only exists within imported modules",
+        "message_filename": "METADATA",
+        "name": "check_for_bias_language"
+    },
+    {
+        "justification": "This app is for Universal Forwarders only",
+        "message_filename": "default/inputs.conf",
+        "name": "check_for_indexer_synced_configs"
+    },
+    {
+        "justification": "All Python scripts are python3 compatible",
+        "message_filename": null,
+        "name": "check_for_python_script_existence"
+    },
+    {
+        "justification": "Only exists within imported modules",
+        "message_filename": "lib/urllib3/util/ssl_match_hostname.py",
+        "name": "check_hostnames_and_ips"
+    },
+    {
+        "justification": "This is a spec file for a custom config file",
+        "message_filename": "README/misp_docker.conf.spec",
+        "name": "check_no_default_or_value_before_stanzas"
+    }
+]

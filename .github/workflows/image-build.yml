@@ -3,16 +3,15 @@
 #
 # SPDX-License-Identifier: GPL-3.0-only
 
-name: Development Image
+name: Image Build
 on:
   push:
     branches:
-      - '**'
-      - '!main'
+      - 'main'
   workflow_dispatch:
 jobs:
-  run-dev:
-    name: Build and Release
+  image-build:
+    name: Build Image
     runs-on: ubuntu-latest
     steps:
       # Environment Setup
@@ -32,11 +31,11 @@ jobs:
       # Build Image
       - id: build
         name: Build Image
-        run: docker build -t ${{ vars.DOCKERHUB_ORGANISATION }}/misp-splunk-forwarder:dev -t ${{ vars.DOCKERHUB_ORGANISATION }}/misp-splunk-forwarder:$(date '+%Y%m%d')-dev .
+        run: docker build -t ${{ vars.DOCKERHUB_ORGANISATION }}/misp-splunk-forwarder:latest -t ${{ vars.DOCKERHUB_ORGANISATION }}/misp-splunk-forwarder:$(date '+%Y%m%d') .
 
       # Push New Image
       - id: push
         name: Push Image
         run: |
-          docker image push ${{ vars.DOCKERHUB_ORGANISATION }}/misp-splunk-forwarder:$(date '+%Y%m%d')-dev
-          docker image push ${{ vars.DOCKERHUB_ORGANISATION }}/misp-splunk-forwarder:dev
+          docker image push ${{ vars.DOCKERHUB_ORGANISATION }}/misp-splunk-forwarder:$(date '+%Y%m%d')
+          docker image push ${{ vars.DOCKERHUB_ORGANISATION }}/misp-splunk-forwarder:latest
