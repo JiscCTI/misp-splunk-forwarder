@@ -16,13 +16,11 @@ services:
       - SPLUNK_START_ARGS=--accept-license
       - HEC_URI=${SPLUNK_HEC_URI}
       - HEC_KEY=${SPLUNK_HEC_KEY}
-      - HEC_SSL=${SPLUNK_HEC_SSL:-true}
       - HEC_VERIFY=${SPLUNK_HEC_VERIFY:-false}
       - INDEX=${SPLUNK_INDEX:-default}
-      - MISP_KEY=${SPLUNK_MISP_AUTHKEY}
-      - MISP_VERIFY=${SPLUNK_MISP_VERIFY:-false}
     volumes:
-      - ./persistent/${COMPOSE_PROJECT_NAME}/splunk/config/:/opt/splunkforwarder/etc/apps/misp_docker/local/
+      - ./persistent/${COMPOSE_PROJECT_NAME}/splunk/config/:/opt/splunkforwarder/etc/apps/misp_docker/local
+      - ./persistent/${COMPOSE_PROJECT_NAME}/data:/opt/misp_docker:ro
       # persist the fishbucket so log entries are not reingested on restart
       - ./persistent/${COMPOSE_PROJECT_NAME}/splunk/fishbucket/:/opt/splunkforwarder/var/lib/splunk/fishbucket
       - ./persistent/${COMPOSE_PROJECT_NAME}/data/tmp/logs/:/var/logs/MISP

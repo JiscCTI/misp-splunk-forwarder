@@ -31,17 +31,25 @@ __version__ = "1.0.0"
 
 disable_warnings(InsecureRequestWarning)
 
-DefaultConfigFile = join(dirname(__file__), "..", "default", "misp_docker.conf")
-LocalConfigFile = join(dirname(__file__), "..", "local", "misp_docker.conf")
-Config = ConfigParser()
-Config.read((DefaultConfigFile, LocalConfigFile))
-if "misp_user_logs" not in Config.sections():
-    Config.add_section("misp_user_logs")
+DefaultAppConfigFile = join(dirname(__file__), "..", "default", "misp_docker.conf")
+JobsConfigFile = "/opt/misp_docker/misp_maintenance_jobs.ini"
+LocalAppConfigFile = join(dirname(__file__), "..", "local", "misp_docker.conf")
+JobsConfig = ConfigParser()
+JobsConfig.read(JobsConfigFile)
+AppConfig = ConfigParser()
+AppConfig.read(
+    (
+        DefaultAppConfigFile,
+        LocalAppConfigFile,
+    )
+)
+if "misp_user_logs" not in AppConfig.sections():
+    AppConfig.add_section("misp_user_logs")
 
-Since = Config.getfloat("misp_user_logs", "LastRun", fallback=0)
+Since = AppConfig.getfloat("misp_user_logs", "LastRun", fallback=0)
 
 Headers = {
-    "Authorization": Config.get("default", "AuthKey"),
+    "Authorization": JobsConfig.get("DEFAULT", "AuthKey"),
     "Accept": "application/json",
     "Content-type": "application/json",
     "User-Agent": "misp_user_logs/{}".format(__version__),
@@ -53,10 +61,10 @@ Options = {
 }
 
 response = post(
-    "{}/admin/logs/index".format(Config.get("default", "BaseUrl")),
+    "{}/admin/logs/index".format(JobsConfig.get("DEFAULT", "BaseUrl")),
     json=Options,
     headers=Headers,
-    verify=Config.getboolean("default", "VerifyTls", fallback=False),
+    verify=JobsConfig.getboolean("DEFAULT", "VerifyTls", fallback=False),
 )
 
 Now = datetime.now().timestamp()
@@ -64,9 +72,9 @@ Now = datetime.now().timestamp()
 for Log in response.json():
     Log = Log["Log"]
 
-    if int(Log["id"]) <= Config.getint("misp_user_logs", "lastId", fallback=0):
+    if int(Log["id"]) <= AppConfig.getint("misp_user_logs", "lastId", fallback=0):
         continue
-    Config.set("misp_user_logs", "lastId", Log["id"])
+    AppConfig.set("misp_user_logs", "lastId", Log["id"])
 
     Log["_time"] = datetime.strptime(Log["created"], "%Y-%m-%d %H:%M:%S").timestamp()
     Log.pop("created")
@@ -92,7 +100,7 @@ for Log in response.json():
     Log["user"] = Log.pop("email")
     Log["user_bunit"] = Log.pop("org")
     Log["user_id"] = Log.pop("model_id")
-    Log["dest"] = Config.get("default", "BaseUrl").split(":")[1][2:]
+    Log["dest"] = JobsConfig.get("DEFAULT", "BaseUrl").split(":")[1][2:]
     Log["dest_host"] = Log["dest"]
 
     if "HTTP method:" in Log["change"]:
@@ -115,6 +123,6 @@ for Log in response.json():
 
     print(dumps(Log, sort_keys=True))
 
-Config.set("misp_user_logs", "LastRun", str(Now))
-with open(LocalConfigFile, "w") as f:
-    Config.write(f)
+AppConfig.set("misp_user_logs", "LastRun", str(Now))
+with open(LocalAppConfigFile, "w") as f:
+    AppConfig.write(f)

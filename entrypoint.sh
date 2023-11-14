@@ -28,10 +28,7 @@ set -e
 
 config_app() {
     sudo /bin/python /sbin/configure.py \
-        --hec-uri "$HEC_URI" --hec-key "$HEC_KEY" --hec-verify "$HEC_VERIFY" --hec-ssl "$HEC_SSL"\
-        --misp-uri "https://$FQDN:$HTTPS_PORT" --misp-key "$MISP_KEY" --misp-verify "$MISP_VERIFY"\
-        --fqdn "$FQDN" --index "$INDEX"
-    sudo chown -R splunk:splunk /opt/splunkforwarder
+        --hec-uri "$HEC_URI" --hec-key "$HEC_KEY" --hec-verify "$HEC_VERIFY" --index "$INDEX" --fqdn "$FQDN"
 }
 
 setup() {

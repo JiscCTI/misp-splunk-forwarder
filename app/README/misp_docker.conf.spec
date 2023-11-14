@@ -12,19 +12,6 @@
 #
 # No Splunk restart is needed for changes to take effect.
 
-[default]
-BaseUrl = <string>
-* required
-* The Base URL of the MISP instance logs will be collected from
-
-AuthKey = <string>
-* required
-* An authentication key for MISP with permission to read logs
-
-VerifyTls = <boolean>
-* required
-* Whether to verify MISPs TLS certificate
-
 [misp_user_logs]
 LastRun = <number>
 * The last time the User log script was run, as a UNIX epoch float
