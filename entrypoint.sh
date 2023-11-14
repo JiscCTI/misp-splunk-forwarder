@@ -43,7 +43,7 @@ setup() {
 
 teardown() {
         # Always run the stop command on termination
-        if [ `whoami` != "${SPLUNK_USER}" ]; then
+        if [ "$(whoami)" != "${SPLUNK_USER}" ]; then
                 RUN_AS_SPLUNK="sudo -u ${SPLUNK_USER}"
         fi
         ${RUN_AS_SPLUNK} ${SPLUNK_HOME}/bin/splunk stop || true
@@ -53,7 +53,7 @@ trap teardown SIGINT SIGTERM
 
 prep_ansible() {
         cd ${SPLUNK_ANSIBLE_HOME}
-        if [ `whoami` == "${SPLUNK_USER}" ]; then
+        if [ "$(whoami)" == "${SPLUNK_USER}" ]; then
                 sed -i -e "s,^become\\s*=.*,become = false," ansible.cfg
         fi
         if [[ "$DEBUG" == "true" ]]; then
@@ -73,7 +73,7 @@ watch_for_failure(){
         echo Ansible playbook complete, will begin streaming var/log/splunk/splunkd_stderr.log
         echo
         user_permission_change
-        if [ `whoami` != "${SPLUNK_USER}" ]; then
+        if [ "$(whoami)" != "${SPLUNK_USER}" ]; then
                 RUN_AS_SPLUNK="sudo -u ${SPLUNK_USER}"
         fi
         # Any crashes/errors while Splunk is running should get logged to splunkd_stderr.log and sent to the container's stdout
