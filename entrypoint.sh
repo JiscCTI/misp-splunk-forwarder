@@ -46,13 +46,13 @@ teardown() {
         if [ "$(whoami)" != "${SPLUNK_USER}" ]; then
                 RUN_AS_SPLUNK="sudo -u ${SPLUNK_USER}"
         fi
-        ${RUN_AS_SPLUNK} ${SPLUNK_HOME}/bin/splunk stop || true
+        ${RUN_AS_SPLUNK} "${SPLUNK_HOME}/bin/splunk" stop || true
 }
 
 trap teardown SIGINT SIGTERM
 
 prep_ansible() {
-        cd ${SPLUNK_ANSIBLE_HOME}
+        cd "${SPLUNK_ANSIBLE_HOME}"
         if [ "$(whoami)" == "${SPLUNK_USER}" ]; then
                 sed -i -e "s,^become\\s*=.*,become = false," ansible.cfg
         fi
@@ -78,9 +78,9 @@ watch_for_failure(){
         fi
         # Any crashes/errors while Splunk is running should get logged to splunkd_stderr.log and sent to the container's stdout
         if [ -z "$SPLUNK_TAIL_FILE" ]; then
-                ${RUN_AS_SPLUNK} tail -n 0 -f ${SPLUNK_HOME}/var/log/splunk/splunkd_stderr.log &
+                ${RUN_AS_SPLUNK} tail -n 0 -f "${SPLUNK_HOME}/var/log/splunk/splunkd_stderr.log" &
         else
-                ${RUN_AS_SPLUNK} tail -n 0 -f ${SPLUNK_TAIL_FILE} &
+                ${RUN_AS_SPLUNK} tail -n 0 -f "${SPLUNK_TAIL_FILE}" &
         fi
         wait
 }
@@ -109,7 +109,7 @@ start() {
 restart(){
         sh -c "echo 'restarting' > ${CONTAINER_ARTIFACT_DIR}/splunk-container.state"
         prep_ansible
-        ${SPLUNK_HOME}/bin/splunk stop 2>/dev/null || true
+        "${SPLUNK_HOME}/bin/splunk" stop 2>/dev/null || true
         ansible-playbook -i inventory/environ.py -l localhost start.yml
         watch_for_failure
 }
@@ -171,7 +171,7 @@ case "$1" in
                 wait
                 ;;
         bash|splunk-bash)
-                /bin/bash --init-file ${SPLUNK_HOME}/bin/setSplunkEnv
+                /bin/bash --init-file "${SPLUNK_HOME}/bin/setSplunkEnv"
                 ;;
         help)
                 shift
