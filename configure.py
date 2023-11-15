@@ -25,20 +25,7 @@ parser.add_argument("-hk", "--hec-key", required=True, dest="hecKey")
 parser.add_argument(
     "-hv", "--hec-verify", choices=["true", "false"], required=True, dest="hecVerify"
 )
-parser.add_argument(
-    "-hs", "--hec-ssl", choices=["true", "false"], required=True, dest="hecSsl"
-)
 parser.add_argument("-in", "--index", required=True, dest="index")
-# MISP options
-parser.add_argument("-mu", "--misp-uri", required=True, dest="mispUri")
-parser.add_argument("-mk", "--misp-key", required=True, dest="mispKey")
-parser.add_argument(
-    "-mv",
-    "--misp-verify",
-    choices=["true", "false"],
-    required=True,
-    dest="mispVerify",
-)
 # Input options
 parser.add_argument("-f", "--fqdn", required=True, dest="fqdn")
 
@@ -48,12 +35,6 @@ if args.hecUri in ("", "https://splunk.example.com:8088"):
     raise ValueError("HEC_URI not configured, cannot start.")
 if args.hecKey in ("", "00000000-1111-2222-3333-444444444444"):
     raise ValueError("HEC_KEY not configured, cannot start.")
-if args.mispUri.startswith("https://:") or args.mispUri.startswith(
-    "https://misp.example.com:"
-):
-    raise ValueError("(MISP) FQDN not configured, cannot start.")
-if args.mispKey in ("", "000111222333444555666777888999aaabbcccdd"):
-    raise ValueError("MISP_KEY not configured, cannot start.")
 if args.fqdn in ("", "misp.example.com"):
     raise ValueError("(MISP) FQDN not configured, cannot start.")
 
@@ -78,17 +59,6 @@ outputs.set("httpout", "httpEventCollectorToken", args.hecKey)
 outputs.set("httpout", "uri", args.hecUri)
 outputs.set("httpout", "sslVerifyServerCert", args.hecVerify)
 outputs.set("httpout", "sslVerifyServerName", args.hecVerify)
-outputs.set("httpout", "useSSL", args.hecSsl)
+outputs.set("httpout", "useSSL", str(args.hecUri.startswith("https://")).lower())
 with open(outputsConf, "w") as f:
     outputs.write(f)
-
-appConf = "/opt/splunkforwarder/etc/apps/misp_docker/local/misp_docker.conf"
-app = ConfigParser()
-app.read(appConf)
-if "default" not in app.sections():
-    app.add_section("default")
-app.set("default", "baseUrl", args.mispUri)
-app.set("default", "authKey", args.mispKey)
-app.set("default", "verifyTls", args.mispVerify)
-with open(appConf, "w") as f:
-    app.write(f)

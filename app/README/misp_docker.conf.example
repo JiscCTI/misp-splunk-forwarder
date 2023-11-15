@@ -3,11 +3,6 @@
 #
 # SPDX-License-Identifier: GPL-3.0-only
 
-[default]
-baseurl = https://misp.example.com
-authkey = 000111222333444555666777888999aaabbcccdd
-verifytls = False
-
 [misp_user_logs]
-lastrun = 0
-lastid = 0
+LastRun = 0
+LastId = 0
