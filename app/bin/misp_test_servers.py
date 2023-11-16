@@ -74,6 +74,14 @@ for server in servers.json():
         timeout=5,
         verify=JobsConfig.getboolean("DEFAULT", "VerifyTls"),
     ).json()
+    remoteUser = post(
+        "{}/servers/getRemoteUser/{}".format(
+            JobsConfig.get("DEFAULT", "BaseUrl"), server["Server"]["id"]
+        ),
+        headers=Headers,
+        timeout=5,
+        verify=JobsConfig.getboolean("DEFAULT", "VerifyTls"),
+    ).json()
     duration = round(time() - start, 3)
 
     # Authentication CIM fields
@@ -97,6 +105,13 @@ for server in servers.json():
     result["response_time"] = duration
     result["src_host"] = JobsConfig.get("DEFAULT", "BaseUrl").split(":")[1][2:]
     result["src_bunit"] = server["Organisation"]["name"]
+    if "User" in remoteUser:
+        result["user"] = remoteUser["User"]
+        result["user_role"] = remoteUser["Role name"]
+        result["user_sync_flag"] = remoteUser["Sync flag"] == "Yes"
+    else:
+        result["action"] = "error"
+        result["reason"] = "cannot-get-remote-user"
 
     # MISP-specific fields
     result["pull_enabled"] = server["Server"]["pull"]
