@@ -9,6 +9,9 @@ services:
   splunk_forwarder:
     hostname: misp_splunk
     image: jisccti/misp-splunk-forwarder:latest
+    depends_on:
+      web:
+        condition: service_healthy
     environment:
       - FQDN=${FQDN:-misp.local}
       - HTTPS_PORT=${HTTPS_PORT:-443}
