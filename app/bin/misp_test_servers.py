@@ -114,7 +114,7 @@ for server in servers.json():
         result["user"] = remoteUser["User"]
         result["user_role"] = remoteUser["Role name"]
         result["user_sync_flag"] = remoteUser["Sync flag"] == "Yes"
-    else:
+    elif testResult["status"] == 1:
         result["action"] = "error"
         result["reason"] = "cannot-get-remote-user"
 
