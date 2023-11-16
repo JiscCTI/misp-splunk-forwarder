@@ -18,6 +18,7 @@ from urllib3.exceptions import InsecureRequestWarning
 try:
     path.insert(0, join(dirname(__file__), "..", "lib"))
     from requests import get, post
+    from requests.exceptions import ReadTimeout
 except ImportError:
     raise ImportError("Failed to load requests")
 
@@ -66,22 +67,26 @@ for server in servers.json():
     baseUrlParts = server["Server"]["url"].split(":")
     result = {}
     start = time()
-    testResult = post(
-        "{}/servers/testConnection/{}".format(
-            JobsConfig.get("DEFAULT", "BaseUrl"), server["Server"]["id"]
-        ),
-        headers=Headers,
-        timeout=5,
-        verify=JobsConfig.getboolean("DEFAULT", "VerifyTls"),
-    ).json()
-    remoteUser = post(
-        "{}/servers/getRemoteUser/{}".format(
-            JobsConfig.get("DEFAULT", "BaseUrl"), server["Server"]["id"]
-        ),
-        headers=Headers,
-        timeout=5,
-        verify=JobsConfig.getboolean("DEFAULT", "VerifyTls"),
-    ).json()
+    try:
+        testResult = post(
+            "{}/servers/testConnection/{}".format(
+                JobsConfig.get("DEFAULT", "BaseUrl"), server["Server"]["id"]
+            ),
+            headers=Headers,
+            timeout=5,
+            verify=JobsConfig.getboolean("DEFAULT", "VerifyTls"),
+        ).json()
+        remoteUser = post(
+            "{}/servers/getRemoteUser/{}".format(
+                JobsConfig.get("DEFAULT", "BaseUrl"), server["Server"]["id"]
+            ),
+            headers=Headers,
+            timeout=5,
+            verify=JobsConfig.getboolean("DEFAULT", "VerifyTls"),
+        ).json()
+    except ReadTimeout:
+        testResult = {"status": 2}
+        remoteUser = {}
     duration = round(time() - start, 3)
 
     # Authentication CIM fields
