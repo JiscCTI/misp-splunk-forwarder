@@ -71,6 +71,7 @@ for feed in feeds.json():
         # Web CIM duration is in milliseconds
         duration = round((time() - start) * 1000, 3)
     except Exception as e:
+        # Shorten exception type to just final class
         exceptionType = str(type(e))
         if "<class '" in exceptionType:
             exceptionType = exceptionType[8:-2]
