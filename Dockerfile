@@ -10,10 +10,9 @@ LABEL org.opencontainers.image.title="misp-splunk-forwarder" org.opencontainers.
     org.opencontainers.image.authors="Jisc <CTI.Analysts@jisc.ac.uk"\
     org.opencontainers.image.base.name="hub.docker.com/splunk/universalforwarder"
 ENV HEC_URI=https://splunk.example.com:8088 HEC_KEY=00000000-1111-2222-3333-444444444444 HEC_SSL=true HEC_VERIFY=false\
-    INDEX=default FQDN=misp.example.com HTTPS_PORT=443 MISP_KEY=000111222333444555666777888999aaabbcccdd\
-    MISP_VERIFY=false
-VOLUME "/opt/splunkforwarder/etc/apps/misp_docker/local" "/opt/splunkforwarder/var/lib/splunk/fishbucket"\
-    "/var/logs/MISP"
+    INDEX=default FQDN=misp.example.com HTTPS_PORT=443
+VOLUME "/opt/splunkforwarder/etc/apps/misp_docker/local/" "/opt/splunkforwarder/var/lib/splunk/fishbucket/"\
+    "/var/logs/MISP/"
 COPY --chown=ansible:ansible configure.py /sbin/configure.py
 COPY --chown=ansible:ansible entrypoint.sh /sbin/entrypoint.sh
 COPY --chown=ansible:ansible app/ /opt/splunkforwarder/etc/apps/misp_docker
