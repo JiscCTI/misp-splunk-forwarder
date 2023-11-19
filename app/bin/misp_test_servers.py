@@ -53,84 +53,114 @@ Headers = {
     "User-Agent": "misp_test_servers/{}".format(__version__),
 }
 
-servers = get(
-    "{}/servers/index".format(JobsConfig.get("DEFAULT", "BaseUrl")),
-    headers=Headers,
-    timeout=5,
-    verify=JobsConfig.getboolean("DEFAULT", "VerifyTls"),
-)
-
-for server in servers.json():
-    if not server["Server"]["push"] and not server["Server"]["pull"]:
-        # Skip over disabled servers
-        continue
-    baseUrlParts = server["Server"]["url"].split(":")
+try:
+    servers = get(
+        "{}/servers/index".format(JobsConfig.get("DEFAULT", "BaseUrl")),
+        headers=Headers,
+        timeout=5,
+        verify=JobsConfig.getboolean("DEFAULT", "VerifyTls"),
+    )
+except Exception as e:
+    # Shorten exception type to just final class
+    exceptionType = str(type(e))
+    if "<class '" in exceptionType:
+        exceptionType = exceptionType[8:-2]
+        exceptionType = exceptionType.split(".")[-1]
     result = {}
-    start = time()
-    try:
-        testResult = post(
-            "{}/servers/testConnection/{}".format(
-                JobsConfig.get("DEFAULT", "BaseUrl"), server["Server"]["id"]
-            ),
-            headers=Headers,
-            timeout=5,
-            verify=JobsConfig.getboolean("DEFAULT", "VerifyTls"),
-        ).json()
-        remoteUser = post(
-            "{}/servers/getRemoteUser/{}".format(
-                JobsConfig.get("DEFAULT", "BaseUrl"), server["Server"]["id"]
-            ),
-            headers=Headers,
-            timeout=5,
-            verify=JobsConfig.getboolean("DEFAULT", "VerifyTls"),
-        ).json()
-    except ReadTimeout:
-        testResult = {"status": 2}
-        remoteUser = {}
-    duration = round(time() - start, 3)
-
-    # Authentication CIM fields
     result["_time"] = time()
-    result["action"] = action[testResult["status"]]
+    result["action"] = "error"
     result["app"] = "MISP"
     result["authentication_method"] = "api"
-    result["dest"] = server["Server"]["name"]
-    result["dest_bunit"] = server["RemoteOrg"]["name"]
-    result["dest_host"] = baseUrlParts[1][2:]
-    result["dest_id"] = int(server["Server"]["id"])
-    if len(baseUrlParts) == 3:
-        result["dest_port"] = int(baseUrlParts[2])
-    elif baseUrlParts[0] == "https":
-        result["dest_port"] = 443
-    else:
-        result["dest_port"] = 80
-    result["dest_tls"] = baseUrlParts[0] == "https"
-    result["duration"] = duration
-    result["reason"] = reason[testResult["status"]]
-    result["response_time"] = duration
+    result["reason"] = "{} getting server list".format(exceptionType)
     result["src_host"] = JobsConfig.get("DEFAULT", "BaseUrl").split(":")[1][2:]
-    result["src_bunit"] = server["Organisation"]["name"]
-    if "User" in remoteUser:
-        result["user"] = remoteUser["User"]
-        result["user_role"] = remoteUser["Role name"]
-        result["user_sync_flag"] = remoteUser["Sync flag"] == "Yes"
-    elif testResult["status"] == 1:
-        # if connection test also failed that keep that error reason
-        result["action"] = "error"
-        result["reason"] = "cannot-get-remote-user"
 
-    # MISP-specific fields
-    result["pull_enabled"] = server["Server"]["pull"]
-    result["pull_rules"] = loads(server["Server"]["pull_rules"])
-    result["push_enabled"] = server["Server"]["push"]
-    result["push_rules"] = loads(server["Server"]["push_rules"])
-    result["self_signed_allowed"] = server["Server"]["self_signed"]
+    print(dumps(result, sort_keys=True))
+    exit()
 
-    if "local_version" in testResult:
-        result["version_local"] = testResult["local_version"]
-    if "mismatch" in testResult:
-        result["version_mismatch"] = testResult["mismatch"]
-    if "version" in testResult:
-        result["version_remote"] = testResult["version"]
+if servers.status_code == 200:
+    for server in servers.json():
+        if not server["Server"]["push"] and not server["Server"]["pull"]:
+            # Skip over disabled servers
+            continue
+        baseUrlParts = server["Server"]["url"].split(":")
+        result = {}
+        start = time()
+        try:
+            testResult = post(
+                "{}/servers/testConnection/{}".format(
+                    JobsConfig.get("DEFAULT", "BaseUrl"), server["Server"]["id"]
+                ),
+                headers=Headers,
+                timeout=5,
+                verify=JobsConfig.getboolean("DEFAULT", "VerifyTls"),
+            ).json()
+            remoteUser = post(
+                "{}/servers/getRemoteUser/{}".format(
+                    JobsConfig.get("DEFAULT", "BaseUrl"), server["Server"]["id"]
+                ),
+                headers=Headers,
+                timeout=5,
+                verify=JobsConfig.getboolean("DEFAULT", "VerifyTls"),
+            ).json()
+        except ReadTimeout:
+            testResult = {"status": 2}
+            remoteUser = {}
+        duration = round(time() - start, 3)
+
+        # Authentication CIM fields
+        result["_time"] = time()
+        result["action"] = action[testResult["status"]]
+        result["app"] = "MISP"
+        result["authentication_method"] = "api"
+        result["dest"] = server["Server"]["name"]
+        result["dest_bunit"] = server["RemoteOrg"]["name"]
+        result["dest_host"] = baseUrlParts[1][2:]
+        result["dest_id"] = int(server["Server"]["id"])
+        if len(baseUrlParts) == 3:
+            result["dest_port"] = int(baseUrlParts[2])
+        elif baseUrlParts[0] == "https":
+            result["dest_port"] = 443
+        else:
+            result["dest_port"] = 80
+        result["dest_tls"] = baseUrlParts[0] == "https"
+        result["duration"] = duration
+        result["reason"] = reason[testResult["status"]]
+        result["response_time"] = duration
+        result["src_host"] = JobsConfig.get("DEFAULT", "BaseUrl").split(":")[1][2:]
+        result["src_bunit"] = server["Organisation"]["name"]
+        if "User" in remoteUser:
+            result["user"] = remoteUser["User"]
+            result["user_role"] = remoteUser["Role name"]
+            result["user_sync_flag"] = remoteUser["Sync flag"] == "Yes"
+        elif testResult["status"] == 1:
+            # if connection test also failed that keep that error reason
+            result["action"] = "error"
+            result["reason"] = "cannot-get-remote-user"
+
+        # MISP-specific fields
+        result["pull_enabled"] = server["Server"]["pull"]
+        result["pull_rules"] = loads(server["Server"]["pull_rules"])
+        result["push_enabled"] = server["Server"]["push"]
+        result["push_rules"] = loads(server["Server"]["push_rules"])
+        result["self_signed_allowed"] = server["Server"]["self_signed"]
+
+        if "local_version" in testResult:
+            result["version_local"] = testResult["local_version"]
+        if "mismatch" in testResult:
+            result["version_mismatch"] = testResult["mismatch"]
+        if "version" in testResult:
+            result["version_remote"] = testResult["version"]
+
+        print(dumps(result, sort_keys=True))
+else:
+    result = {}
+    result["_time"] = time()
+    result["action"] = "error"
+    result["app"] = "MISP"
+    result["authentication_method"] = "api"
+    result["reason"] = "{} - {} getting server list".format(
+        servers.status_code, servers.reason
+    )
+    result["src_host"] = JobsConfig.get("DEFAULT", "BaseUrl").split(":")[1][2:]
 
     print(dumps(result, sort_keys=True))
