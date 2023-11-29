@@ -40,6 +40,7 @@ config_app() {
     sudo mkdir -p /opt/splunkforwarder/etc/apps/misp_docker/
     sudo cp -r /opt/misp_docker_app/* /opt/splunkforwarder/etc/apps/misp_docker/
     # Configure app
+    sudo mkdir -p /opt/splunkforwarder/etc/apps/misp_docker/local/
     sudo /bin/python /sbin/configure.py \
         --hec-uri "$HEC_URI" --hec-key "$HEC_KEY" --hec-verify "$HEC_VERIFY" --index "$INDEX" --fqdn "$FQDN"
 }
