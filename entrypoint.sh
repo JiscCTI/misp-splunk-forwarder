@@ -27,6 +27,19 @@
 set -e
 
 config_app() {
+    if [ -d /opt/splunkforwarder/etc/apps/misp_docker/local/ ]; then
+        # Keep local config if present
+        sudo mkdir -p /opt/misp_docker_app/local/
+        sudo cp -r /opt/splunkforwarder/etc/apps/misp_docker/local/* /opt/misp_docker_app/local/
+    fi
+    if [ -d /opt/splunkforwarder/etc/apps/misp_docker/ ]; then
+        # Delete currently installed app, incase files are removed in new version
+        sudo rm -rf /opt/splunkforwarder/etc/apps/misp_docker/
+    fi
+    # Install app (with local config if present)
+    sudo mkdir -p /opt/splunkforwarder/etc/apps/misp_docker/
+    sudo cp -r /opt/misp_docker_app/* /opt/splunkforwarder/etc/apps/misp_docker/
+    # Configure app
     sudo /bin/python /sbin/configure.py \
         --hec-uri "$HEC_URI" --hec-key "$HEC_KEY" --hec-verify "$HEC_VERIFY" --index "$INDEX" --fqdn "$FQDN"
 }

@@ -22,9 +22,9 @@ services:
       - HEC_VERIFY=${SPLUNK_HEC_VERIFY:-false}
       - INDEX=${SPLUNK_INDEX:-default}
     volumes:
-      - ./persistent/${COMPOSE_PROJECT_NAME}/splunk/config/:/opt/splunkforwarder/etc/apps/misp_docker/local/
+      # Map base image's volumes
+      - ./persistent/${COMPOSE_PROJECT_NAME}/splunk/etc/:/opt/splunkforwarder/etc/
+      - ./persistent/${COMPOSE_PROJECT_NAME}/splunk/var/:/opt/splunkforwarder/var/
+      # Mount MISP-specific volume
       - ./persistent/${COMPOSE_PROJECT_NAME}/data/:/opt/misp_docker/:ro
-      # persist the fishbucket so log entries are not reingested on restart
-      - ./persistent/${COMPOSE_PROJECT_NAME}/splunk/fishbucket/:/opt/splunkforwarder/var/lib/splunk/fishbucket/
-      - ./persistent/${COMPOSE_PROJECT_NAME}/data/tmp/logs/:/var/logs/MISP/:ro
     restart: unless-stopped
