@@ -150,6 +150,10 @@ else:
     result["reason"] = "{} - {} getting feed list".format(
         feeds.status_code, feeds.reason
     )
+    try:
+        result["response"] = feeds.json()
+    except Exception:
+        result["response"] = feeds.content.decode(errors="replace")
     result["src_host"] = JobsConfig.get("DEFAULT", "BaseUrl").split(":")[1][2:]
 
     print(dumps(result, sort_keys=True))

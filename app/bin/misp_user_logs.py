@@ -146,4 +146,8 @@ else:
     result["error"] = "{} - {} getting logs".format(
         logs.status_code, logs.reason
     )
+    try:
+        result["response"] = logs.json()
+    except Exception:
+        result["response"] = logs.content.decode(errors="replace")
     print(dumps(result, sort_keys=True))

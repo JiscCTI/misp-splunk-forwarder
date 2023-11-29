@@ -171,6 +171,10 @@ else:
     result["reason"] = "{} - {} getting server list".format(
         servers.status_code, servers.reason
     )
+    try:
+        result["response"] = servers.json()
+    except Exception:
+        result["response"] = servers.content.decode(errors="replace")
     result["src_host"] = JobsConfig.get("DEFAULT", "BaseUrl").split(":")[1][2:]
 
     print(dumps(result, sort_keys=True))
