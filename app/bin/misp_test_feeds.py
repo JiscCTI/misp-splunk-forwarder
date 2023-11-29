@@ -69,6 +69,16 @@ except Exception as e:
 
 if feeds.status_code == 200:
     for feed in feeds.json():
+        if type(feed) != dict:
+            result = {}
+            result["_time"] = time()
+            result["error"] = "Expected dict got {}".format(type(feed))
+            try:
+                result["value"] = str(feed)
+            except Exception:
+                result["value"] = "Non-serialisable"
+            print(dumps(result, sort_keys=True))
+            continue
         feed = feed["Feed"]
         if not feed["enabled"] or feed["input_source"] != "network":
             # Skip over disabled and local feeds

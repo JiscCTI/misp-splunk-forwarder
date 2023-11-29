@@ -12,6 +12,7 @@ from datetime import datetime
 from json import dumps
 from os.path import dirname, join
 from sys import path
+from time import time
 from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
 
@@ -60,7 +61,7 @@ Options = {
     "model": "User",
 }
 
-response = post(
+logs = post(
     "{}/admin/logs/index".format(JobsConfig.get("DEFAULT", "BaseUrl")),
     json=Options,
     headers=Headers,
@@ -69,60 +70,80 @@ response = post(
 
 Now = datetime.now().timestamp()
 
-for Log in response.json():
-    Log = Log["Log"]
+if logs.status_code == 200:
+    for log in logs.json():
+        if type(log) != dict:
+            result = {}
+            result["_time"] = time()
+            result["error"] = "Expected dict got {}".format(type(log))
+            try:
+               result["value"] = str(log)
+            except Exception:
+                result["value"] = "Non-serialisable"
+            print(dumps(result, sort_keys=True))
+            continue
+        log = log["Log"]
 
-    if int(Log["id"]) <= AppConfig.getint("misp_user_logs", "lastId", fallback=0):
-        continue
-    AppConfig.set("misp_user_logs", "lastId", Log["id"])
+        if int(log["id"]) <= AppConfig.getint("misp_user_logs", "lastId", fallback=0):
+            continue
+        AppConfig.set("misp_user_logs", "lastId", log["id"])
 
-    Log["_time"] = datetime.strptime(Log["created"], "%Y-%m-%d %H:%M:%S").timestamp()
-    Log.pop("created")
+        log["_time"] = datetime.strptime(
+            log["created"], "%Y-%m-%d %H:%M:%S"
+        ).timestamp()
+        log.pop("created")
 
-    Log["type"] = Log.pop("action")
+        log["type"] = log.pop("action")
 
-    if Log["type"] in ("auth", "login"):
-        Log["action"] = "success"
-    elif Log["type"] in ("auth_fail", "login_fail"):
-        Log["action"] = "failure"
+        if log["type"] in ("auth", "login"):
+            log["action"] = "success"
+        elif log["type"] in ("auth_fail", "login_fail"):
+            log["action"] = "failure"
 
-    if Log["type"] in ("auth", "auth_fail"):
-        Log["authentication_method"] = "api"
-    elif Log["type"] in ("login", "login_fail"):
-        Log["authentication_method"] = "web"
+        if log["type"] in ("auth", "auth_fail"):
+            log["authentication_method"] = "api"
+        elif log["type"] in ("login", "login_fail"):
+            log["authentication_method"] = "web"
 
-    Log.pop("type")
+        log.pop("type")
 
-    Log["app"] = "MISP"
-    Log["reason"] = Log.pop("title")
-    Log["src_ip"] = Log.pop("ip")
-    Log["src"] = Log["src_ip"]
-    Log["user"] = Log.pop("email")
-    Log["user_bunit"] = Log.pop("org")
-    Log["user_id"] = Log.pop("model_id")
-    Log["dest"] = JobsConfig.get("DEFAULT", "BaseUrl").split(":")[1][2:]
-    Log["dest_host"] = Log["dest"]
+        log["app"] = "MISP"
+        log["reason"] = log.pop("title")
+        log["src_ip"] = log.pop("ip")
+        log["src"] = log["src_ip"]
+        log["user"] = log.pop("email")
+        log["user_bunit"] = log.pop("org")
+        log["user_id"] = log.pop("model_id")
+        log["dest"] = JobsConfig.get("DEFAULT", "BaseUrl").split(":")[1][2:]
+        log["dest_host"] = log["dest"]
 
-    if "HTTP method:" in Log["change"]:
-        act = {}
-        fields = Log["change"].split("\n")
-        i = 0
-        for field in fields:
-            field = field.split(": ")
-            if i == 0:
-                act["method"] = field[1]
-            else:
-                act["uri"] = field[1]
-            i = i + 1
-        Log["act"] = act
-    Log.pop("change")
+        if "HTTP method:" in log["change"]:
+            act = {}
+            fields = log["change"].split("\n")
+            i = 0
+            for field in fields:
+                field = field.split(": ")
+                if i == 0:
+                    act["method"] = field[1]
+                else:
+                    act["uri"] = field[1]
+                i = i + 1
+            log["act"] = act
+        log.pop("change")
 
-    Log.pop("description")
-    Log.pop("id")
-    Log.pop("model")
+        log.pop("description")
+        log.pop("id")
+        log.pop("model")
 
-    print(dumps(Log, sort_keys=True))
+        print(dumps(log, sort_keys=True))
 
-AppConfig.set("misp_user_logs", "LastRun", str(Now))
-with open(LocalAppConfigFile, "w") as f:
-    AppConfig.write(f)
+    AppConfig.set("misp_user_logs", "LastRun", str(Now))
+    with open(LocalAppConfigFile, "w") as f:
+        AppConfig.write(f)
+else:
+    result = {}
+    result["_time"] = time()
+    result["error"] = "{} - {} getting logs".format(
+        logs.status_code, logs.reason
+    )
+    print(dumps(result, sort_keys=True))

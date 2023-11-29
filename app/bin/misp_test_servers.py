@@ -79,6 +79,16 @@ except Exception as e:
 
 if servers.status_code == 200:
     for server in servers.json():
+        if type(server) != dict:
+            result = {}
+            result["_time"] = time()
+            result["error"] = "Expected dict got {}".format(type(server))
+            try:
+                result["value"] = str(server)
+            except Exception:
+                result["value"] = "Non-serialisable"
+            print(dumps(result, sort_keys=True))
+            continue
         if not server["Server"]["push"] and not server["Server"]["pull"]:
             # Skip over disabled servers
             continue
