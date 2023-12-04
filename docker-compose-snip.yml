@@ -7,8 +7,6 @@ version: '3'
 services:
   # misp-docker containers here
   splunk-forwarder:
-    hostname: misp_splunk
-    image: jisccti/misp-splunk-forwarder:latest
     depends_on:
       web:
         condition: service_healthy
@@ -21,10 +19,12 @@ services:
       - HEC_KEY=${SPLUNK_HEC_KEY}
       - HEC_VERIFY=${SPLUNK_HEC_VERIFY:-false}
       - INDEX=${SPLUNK_INDEX:-default}
+    hostname: misp_splunk
+    image: jisccti/misp-splunk-forwarder:latest
+    restart: unless-stopped
     volumes:
       # Map base image's volumes
       - ./persistent/${COMPOSE_PROJECT_NAME}/splunk/etc/:/opt/splunkforwarder/etc/
       - ./persistent/${COMPOSE_PROJECT_NAME}/splunk/var/:/opt/splunkforwarder/var/
       # Mount MISP-specific volume
       - ./persistent/${COMPOSE_PROJECT_NAME}/data/:/opt/misp_docker/:ro
-    restart: unless-stopped
