@@ -89,7 +89,7 @@ if feeds.status_code == 200:
             url = "{}/manifest.json".format(url)
 
         Headers = None
-        if feed["headers"] is not None:
+        if feed["headers"] is not None and len(feed["headers"]) > 0:
             Headers = dict(
                 header.split(": ", 1) for header in feed["headers"].split("\r\n")
             )
