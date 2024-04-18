@@ -72,7 +72,7 @@ Now = datetime.now().timestamp()
 
 if logs.status_code == 200:
     for log in logs.json():
-        if isinstance(log, dict):
+        if not isinstance(log, dict):
             result = {}
             result["_time"] = time()
             result["error"] = f"Expected dict got {type(log)}"

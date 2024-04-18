@@ -76,7 +76,7 @@ except RequestException as e:
 
 if feeds.status_code == 200:
     for feed in feeds.json():
-        if isinstance(feed, dict):
+        if not isinstance(feed, dict):
             result = {}
             result["_time"] = time()
             result["error"] = f"Expected dict got {type(feed)}"

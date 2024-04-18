@@ -86,7 +86,7 @@ except RequestException as e:
 
 if servers.status_code == 200:
     for server in servers.json():
-        if isinstance(server, dict):
+        if not isinstance(server, dict):
             result = {}
             result["_time"] = time()
             result["error"] = f"Expected dict got {type(server)}"
