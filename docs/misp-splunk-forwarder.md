@@ -4,7 +4,7 @@ This container is designed to be an add-on to
 **NOTE:** By default, following the below steps, TLS verification is disabled as Splunk defaults to
 a self-signed certificate. In production environments, the Splunk HEC listener should be configured
 to use a trusted certificate, then `splunk-insecureskipverify` in the Docker configuration should be
-set to `false` and `SPLUNK_HEC_VERIFY` in `.env` should be set to `true`.
+set to `"false"` and `SPLUNK_HEC_VERIFY` in `.env` should be set to `true`.
 
 ## Usage
 
@@ -23,7 +23,7 @@ Configure Docker to forward logs to the HTTP Event Collector, by either:
     "log-opts": {
         "splunk-token": "00000000-1111-2222-3333-444444444444",
         "splunk-url": "https://splunk.example.com:8088",
-        "splunk-insecureskipverify": true,
+        "splunk-insecureskipverify": "true",
         "splunk-sourcetype": "_json",
         "splunk-index": "default",
         "tag": "image={{.ImageName}} containerId={{.ID}}",
