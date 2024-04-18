@@ -9,7 +9,8 @@ on:
     branches:
       - '**'
       - '!main'
-  workflow_dispatch:
+env:
+  BRANCH_NAME: ${{ github.head_ref || github.ref_name }} 
 jobs:
   image-build-dev:
     name: Build Image (Dev)
@@ -32,11 +33,9 @@ jobs:
       # Build Image
       - id: build
         name: Build Image
-        run: docker build -t ${{ vars.DOCKERHUB_ORGANISATION }}/misp-splunk-forwarder:dev -t ${{ vars.DOCKERHUB_ORGANISATION }}/misp-splunk-forwarder:$(date '+%Y%m%d')-dev .
+        run: docker build -t ${{ vars.DOCKERHUB_ORGANISATION }}/misp-splunk-forwarder:${{ env.BRANCH_NAME }} .
 
       # Push New Image
       - id: push
         name: Push Image
-        run: |
-          docker image push ${{ vars.DOCKERHUB_ORGANISATION }}/misp-splunk-forwarder:$(date '+%Y%m%d')-dev
-          docker image push ${{ vars.DOCKERHUB_ORGANISATION }}/misp-splunk-forwarder:dev
+        run: docker image push ${{ vars.DOCKERHUB_ORGANISATION }}/misp-splunk-forwarder:${{ env.BRANCH_NAME }}
