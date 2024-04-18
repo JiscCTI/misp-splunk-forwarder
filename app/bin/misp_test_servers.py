@@ -2,7 +2,7 @@
 
 """Test if remote servers are reachable and output Splunk CIM-compliant Authentication events"""
 
-# SPDX-FileCopyrightText: 2023 Jisc Services Limited
+# SPDX-FileCopyrightText: 2023-2024 Jisc Services Limited
 # SPDX-FileContributor: Joe Pitt
 #
 # SPDX-License-Identifier: GPL-3.0-only
@@ -10,31 +10,36 @@
 from configparser import ConfigParser
 from json import dumps, loads
 from os.path import dirname, join
-from sys import path
+from sys import exit as sys_exit, path
 from time import time
+
 from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
 
-try:
-    path.insert(0, join(dirname(__file__), "..", "lib"))
-    from requests import get, post
-    from requests.exceptions import ReadTimeout
-except ImportError:
-    raise ImportError("Failed to load requests")
+path.insert(0, join(dirname(__file__), "..", "lib"))
+# Import must happen after PATH is altered
+from requests import get, post  # pylint: disable=wrong-import-position
+
+# pylint: disable-next=wrong-import-position
+from requests.exceptions import (
+    JSONDecodeError,
+    ReadTimeout,
+    RequestException,
+)
 
 __author__ = "Joe Pitt"
-__copyright__ = "Copyright 2023, Jisc Services Limited"
+__copyright__ = "Copyright 2023-2024, Jisc Services Limited"
 __email__ = "Joe.Pitt@jisc.ac.uk"
 __license__ = "GPL-3.0-only"
 __maintainer__ = "Joe Pitt"
 __status__ = "Production"
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 disable_warnings(InsecureRequestWarning)
 
-JobsConfigFile = "/opt/misp_docker/misp_maintenance_jobs.ini"
+JOBS_CONF = "/opt/misp_docker/misp_maintenance_jobs.ini"
 JobsConfig = ConfigParser()
-JobsConfig.read(JobsConfigFile)
+JobsConfig.read(JOBS_CONF)
 
 action = {1: "success", 2: "error", 3: "error", 4: "failure", 5: "error", 6: "error"}
 reason = {
@@ -46,46 +51,48 @@ reason = {
     6: "terms-not-accepted",
 }
 
-Headers = {
+headers = {
     "Authorization": JobsConfig.get("DEFAULT", "AuthKey"),
     "Accept": "application/json",
     "Content-type": "application/json",
-    "User-Agent": "misp_test_servers/{}".format(__version__),
+    "User-Agent": f"misp_test_servers/{__version__}",
 }
 
 try:
     servers = get(
-        "{}/servers/index".format(JobsConfig.get("DEFAULT", "BaseUrl")),
-        headers=Headers,
+        f"{JobsConfig.get('DEFAULT', 'BaseUrl')}/servers/index",
+        headers=headers,
         timeout=5,
         verify=JobsConfig.getboolean("DEFAULT", "VerifyTls"),
     )
-except Exception as e:
+except RequestException as e:
     # Shorten exception type to just final class
-    exceptionType = str(type(e))
-    if "<class '" in exceptionType:
-        exceptionType = exceptionType[8:-2]
-        exceptionType = exceptionType.split(".")[-1]
+    EXCEPTION_TYPE = str(type(e))
+    if "<class '" in EXCEPTION_TYPE:
+        EXCEPTION_TYPE = EXCEPTION_TYPE[8:-2]
+        # Benefit of use-maxsplit-arg unclear
+        # pylint: disable-next=use-maxsplit-arg
+        EXCEPTION_TYPE = EXCEPTION_TYPE.split(".")[-1]
     result = {}
     result["_time"] = time()
     result["action"] = "error"
     result["app"] = "MISP"
     result["authentication_method"] = "api"
-    result["reason"] = "{} getting server list".format(exceptionType)
+    result["reason"] = f"{EXCEPTION_TYPE} getting server list"
     result["src_host"] = JobsConfig.get("DEFAULT", "BaseUrl").split(":")[1][2:]
 
     print(dumps(result, sort_keys=True))
-    exit()
+    sys_exit()
 
 if servers.status_code == 200:
     for server in servers.json():
-        if type(server) != dict:
+        if isinstance(server, dict):
             result = {}
             result["_time"] = time()
-            result["error"] = "Expected dict got {}".format(type(server))
+            result["error"] = f"Expected dict got {type(server)}"
             try:
                 result["value"] = str(server)
-            except Exception:
+            except ValueError:
                 result["value"] = "Non-serialisable"
             print(dumps(result, sort_keys=True))
             continue
@@ -97,18 +104,16 @@ if servers.status_code == 200:
         start = time()
         try:
             testResult = post(
-                "{}/servers/testConnection/{}".format(
-                    JobsConfig.get("DEFAULT", "BaseUrl"), server["Server"]["id"]
-                ),
-                headers=Headers,
+                f"{JobsConfig.get('DEFAULT', 'BaseUrl')}/servers/"
+                f"testConnection/{server['Server']['id']}",
+                headers=headers,
                 timeout=5,
                 verify=JobsConfig.getboolean("DEFAULT", "VerifyTls"),
             ).json()
             remoteUser = post(
-                "{}/servers/getRemoteUser/{}".format(
-                    JobsConfig.get("DEFAULT", "BaseUrl"), server["Server"]["id"]
-                ),
-                headers=Headers,
+                f"{JobsConfig.get('DEFAULT', 'BaseUrl')}/servers/"
+                f"getRemoteUser/{server['Server']['id']}",
+                headers=headers,
                 timeout=5,
                 verify=JobsConfig.getboolean("DEFAULT", "VerifyTls"),
             ).json()
@@ -168,12 +173,10 @@ else:
     result["action"] = "error"
     result["app"] = "MISP"
     result["authentication_method"] = "api"
-    result["reason"] = "{} - {} getting server list".format(
-        servers.status_code, servers.reason
-    )
+    result["reason"] = f"{servers.status_code} - {servers.reason} getting server list"
     try:
         result["response"] = servers.json()
-    except Exception:
+    except JSONDecodeError:
         result["response"] = servers.content.decode(errors="replace")
     result["src_host"] = JobsConfig.get("DEFAULT", "BaseUrl").split(":")[1][2:]
 
