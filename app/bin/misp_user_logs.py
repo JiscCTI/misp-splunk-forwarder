@@ -2,7 +2,7 @@
 
 """Fetch user logs from MISP for indexing by Splunk as CIM-compliant Authentication events"""
 
-# SPDX-FileCopyrightText: 2023 Jisc Services Limited
+# SPDX-FileCopyrightText: 2023-2024 Jisc Services Limited
 # SPDX-FileContributor: Joe Pitt
 #
 # SPDX-License-Identifier: GPL-3.0-only
@@ -16,27 +16,26 @@ from time import time
 from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
 
-try:
-    path.insert(0, join(dirname(__file__), "..", "lib"))
-    from requests import post
-except ImportError:
-    raise ImportError("Failed to load requests")
+path.insert(0, join(dirname(__file__), "..", "lib"))
+# Import must happen after PATH is altered
+from requests import post  # pylint: disable=wrong-import-position
+from requests import JSONDecodeError  # pylint: disable=wrong-import-position
 
 __author__ = "Joe Pitt"
-__copyright__ = "Copyright 2023, Jisc Services Limited"
+__copyright__ = "Copyright 2023-2024, Jisc Services Limited"
 __email__ = "Joe.Pitt@jisc.ac.uk"
 __license__ = "GPL-3.0-only"
 __maintainer__ = "Joe Pitt"
 __status__ = "Production"
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 disable_warnings(InsecureRequestWarning)
 
 DefaultAppConfigFile = join(dirname(__file__), "..", "default", "misp_docker.conf")
-JobsConfigFile = "/opt/misp_docker/misp_maintenance_jobs.ini"
+JOBS_CONFIG = "/opt/misp_docker/misp_maintenance_jobs.ini"
 LocalAppConfigFile = join(dirname(__file__), "..", "local", "misp_docker.conf")
 JobsConfig = ConfigParser()
-JobsConfig.read(JobsConfigFile)
+JobsConfig.read(JOBS_CONFIG)
 AppConfig = ConfigParser()
 AppConfig.read(
     (
@@ -53,7 +52,7 @@ Headers = {
     "Authorization": JobsConfig.get("DEFAULT", "AuthKey"),
     "Accept": "application/json",
     "Content-type": "application/json",
-    "User-Agent": "misp_user_logs/{}".format(__version__),
+    "User-Agent": f"misp_user_logs/{__version__}",
 }
 
 Options = {
@@ -62,23 +61,24 @@ Options = {
 }
 
 logs = post(
-    "{}/admin/logs/index".format(JobsConfig.get("DEFAULT", "BaseUrl")),
+    f"{JobsConfig.get('DEFAULT', 'BaseUrl')}/admin/logs/index",
     json=Options,
     headers=Headers,
     verify=JobsConfig.getboolean("DEFAULT", "VerifyTls", fallback=False),
+    timeout=3,
 )
 
 Now = datetime.now().timestamp()
 
 if logs.status_code == 200:
     for log in logs.json():
-        if type(log) != dict:
+        if not isinstance(log, dict):
             result = {}
             result["_time"] = time()
-            result["error"] = "Expected dict got {}".format(type(log))
+            result["error"] = f"Expected dict got {type(log)}"
             try:
-               result["value"] = str(log)
-            except Exception:
+                result["value"] = str(log)
+            except ValueError:
                 result["value"] = "Non-serialisable"
             print(dumps(result, sort_keys=True))
             continue
@@ -138,16 +138,14 @@ if logs.status_code == 200:
         print(dumps(log, sort_keys=True))
 
     AppConfig.set("misp_user_logs", "LastRun", str(Now))
-    with open(LocalAppConfigFile, "w") as f:
+    with open(LocalAppConfigFile, "w", encoding="utf-8") as f:
         AppConfig.write(f)
 else:
     result = {}
     result["_time"] = time()
-    result["error"] = "{} - {} getting logs".format(
-        logs.status_code, logs.reason
-    )
+    result["error"] = f"{logs.status_code} - {logs.reason} getting logs"
     try:
         result["response"] = logs.json()
-    except Exception:
+    except JSONDecodeError:
         result["response"] = logs.content.decode(errors="replace")
     print(dumps(result, sort_keys=True))

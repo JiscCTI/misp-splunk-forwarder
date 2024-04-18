@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2023 Jisc Services Limited
+# SPDX-FileCopyrightText: 2023-2024 Jisc Services Limited
 # SPDX-FileContributor: Joe Pitt
 #
 # SPDX-License-Identifier: GPL-3.0-only
@@ -9,7 +9,6 @@ on:
     branches:
       - '**'
       - '!main'
-  workflow_dispatch:
 jobs:
   appinspect-dev:
     name: Inspect App (Dev)
@@ -17,7 +16,7 @@ jobs:
     steps:
       - id: checkout
         name: Checkout Project
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - id: pip
         name: Install AppInspect
         run: |

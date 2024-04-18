@@ -1,0 +1,29 @@
+# SPDX-FileCopyrightText: 2024 Jisc Services Limited
+# SPDX-FileContributor: Joe Pitt
+#
+# SPDX-License-Identifier: GPL-3.0-only
+
+name: Update DockerHub
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+jobs:
+  run:
+    name: Update DockerHub Pages
+    runs-on: ubuntu-latest
+    steps:
+      # Environment Setup
+      - id: checkout
+        name: Checkout Project
+        uses: actions/checkout@v4
+      - id: splunk-forwarder
+        name: MISP Docker Forwarder App for Splunk
+        uses: peter-evans/dockerhub-description@v4
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: ${{ vars.DOCKERHUB_ORGANISATION }}/misp-splunk-forwarder
+          short-description: Splunk Universal Forwarder configured for use with ${{ vars.DOCKERHUB_ORGANISATION }}/misp-web.
+          readme-filepath: docs/misp-splunk-forwarder.md
