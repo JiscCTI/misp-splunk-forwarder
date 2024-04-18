@@ -2,7 +2,7 @@
 
 # SPDX-FileCopyrightText: 2018 Splunk
 # SPDX-FileContributor: Splunk
-# SPDX-FileCopyrightText: 2023 Jisc Services Limited
+# SPDX-FileCopyrightText: 2023-2024 Jisc Services Limited
 # SPDX-FileContributor: Joe Pitt
 #
 # SPDX-License-Identifier: Apache-2.0
@@ -42,7 +42,7 @@ config_app() {
     # Configure app
     sudo mkdir -p /opt/splunkforwarder/etc/apps/misp_docker/local/
     sudo /bin/python /sbin/configure.py \
-        --hec-uri "$HEC_URI" --hec-key "$HEC_KEY" --hec-verify "$HEC_VERIFY" --index "$INDEX" --fqdn "$FQDN"
+        --hec-uri "$SPLUNK_HEC_URI" --hec-key "$SPLUNK_HEC_KEY" --hec-verify "$SPLUNK_HEC_VERIFY" --index "$SPLUNK_INDEX" --fqdn "$FQDN"
 }
 
 setup() {
