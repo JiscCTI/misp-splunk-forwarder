@@ -86,7 +86,7 @@ if logs.status_code == 200:
 
         if int(log["id"]) <= AppConfig.getint("misp_user_logs", "lastId", fallback=0):
             continue
-        AppConfig.set("misp_user_logs", "lastId", log["id"])
+        AppConfig.set("misp_user_logs", "lastId", str(log["id"]))
 
         log["_time"] = datetime.strptime(
             log["created"], "%Y-%m-%d %H:%M:%S"
