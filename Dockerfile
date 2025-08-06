@@ -3,8 +3,8 @@
 #
 # SPDX-License-Identifier: GPL-3.0-only
 
-FROM splunk/universalforwarder:9.0.9
-LABEL org.opencontainers.image.title="misp-splunk-forwarder" org.opencontainers.image.version=v1.0.1\
+FROM splunk/universalforwarder:10.0.0
+LABEL org.opencontainers.image.title="misp-splunk-forwarder" org.opencontainers.image.version=v1.0.2\
     org.opencontainers.image.ref.name="misp-splunk-forwarder"\
     org.opencontainers.image.description="Self configuring Splunk Universal Forwarder for MISP."\
     org.opencontainers.image.authors="Jisc <CTI.Analysts@jisc.ac.uk"\
