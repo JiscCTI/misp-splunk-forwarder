@@ -48,5 +48,10 @@
         "justification": "Scripted inputs are essential to this UF app",
         "message_filename": "default/inputs.conf",
         "name": "check_for_scripted_inputs"
+    },
+    {
+        "justification": "The app is not intended for use on aarch64",
+        "message_filename": null,
+        "name": "check_aarch64_compatibility"
     }
 ]

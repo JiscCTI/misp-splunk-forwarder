@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2023-2024 Jisc Services Limited
+# SPDX-FileCopyrightText: 2023-2025 Jisc Services Limited
 # SPDX-FileContributor: Joe Pitt
 #
 # SPDX-License-Identifier: GPL-3.0-only
@@ -37,4 +37,4 @@ jobs:
         name: Inspect App
         run: |
           ./venv/bin/splunk-appinspect inspect --mode=precert --max-messages=all --output-file report.json misp_docker.spl 2>&1 >/dev/null
-          python3 .github/workflow-helpers/appinspect-check.py
+          python3 .github/workflow-helpers/appinspect_check.py
